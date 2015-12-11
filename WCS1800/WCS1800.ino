@@ -1,10 +1,9 @@
-#define Aout A0
-#define Dout 8
+#define Aout A1
+
 #define LED 13
 
 void setup()
 {
-  pinMode(Dout,INPUT);
   pinMode(Aout,INPUT);
   pinMode(LED,OUTPUT);
   Serial.begin(19200);
@@ -23,15 +22,6 @@ void loop()
 //  Serial.print(")\n");
   Serial.print("\n");
   //(30/1000) *1024/5
-  if(digitalRead(Dout) == LOW)
-  {
-    Serial.println("Alarm!");
-    digitalWrite(LED,HIGH); 
-  }
-  else
-  {
-    digitalWrite(LED,LOW);
-  }
   
-  delay(20);
+  delay(200);
 }

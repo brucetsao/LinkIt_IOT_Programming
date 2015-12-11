@@ -1,5 +1,5 @@
 #define Aout A1
-#define MidValue 524
+int  MidValue = 524 ;
 void setup()
 {
   pinMode(Aout,INPUT);

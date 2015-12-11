@@ -1,22 +1,11 @@
 #include <LDateTime.h>
+#include "ldatetimevar.h"
 
-
-/*
-typedef struct
-{
-	int year;//year
-	int mon;//month,begin from 1
-	int day;//day,begin from 1
-	int hour;//hour,24-hour
-	int min;//minute
-	int sec;//second
-}datetimeInfo;
-getTime(&datetimeInfo)  gettime information
-setTime(datetimeInfo *time)   set time information
-*/
 
 datetimeInfo t;
 unsigned int rtc;
+LdateInfo nowdate ;
+LtimeInfo nowtime ;
 
 void setup() {
   Serial.begin(9600);
@@ -25,16 +14,28 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  nowdate.year = 2015 ;
+  nowdate.month = 12 ;
+  nowdate.day = 1 ;
+  nowtime.hour = 12 ;
+  nowtime.minute = 10 ;
+  nowtime.second = 20 ;
+  
   LDateTime.getTime(&t);
   LDateTime.getRtc(&rtc);
   // now show date time
   ShowDateTime(t) ;
- 
+//=========now set new time1
+  setLdate(nowdate) ;
+  setLtime(nowtime) ;
+  
+  // now show date time
+  LDateTime.getTime(&t);
+  ShowDateTime(t) ;
   
   
   delay(1000);
 }
-
 
 void ShowDateTime(datetimeInfo tt)
 {
@@ -57,4 +58,25 @@ void ShowDateTime(datetimeInfo tt)
   Serial.print(tt.sec) ;
   Serial.print("\n") ;
  
+}
+void setLdate(LdateInfo v)
+{
+ datetimeInfo p;
+   LDateTime.getTime(&p);
+    p.year = v.year ;
+    p.mon = v.month ;
+    p.day = v.day ;
+     LDateTime.setTime(&p);
+  
+}
+
+void setLtime(LtimeInfo v)
+{
+ datetimeInfo p;
+   LDateTime.getTime(&p);
+    p.hour = v.hour ;
+    p.min = v.minute ;
+    p.sec = v.second ;
+     LDateTime.setTime(&p);
+  
 }
