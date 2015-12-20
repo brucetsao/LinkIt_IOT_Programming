@@ -1,19 +1,3 @@
-#include <LDateTime.h>
-#include <LWiFi.h>
-#include <LWiFiClient.h>
-#define SITE_URL "184.106.153.149"
-#define WIFI_AP "linkitone" //請輸入所要連的AP名稱
-#define WIFI_PWD "" // 請輸入AP 密碼
-LWiFiClient client;
-// ThingSpeak Settings
-String writeAPIKey = "7FQZ6JEDHQO6QF1H ";    // Write API Key for a ThingSpeak Channel
-const int updateInterval = 5000;        // Time interval in milliseconds to update ThingSpeak   
-
-// Variable Setup
-long lastConnectionTime = 0; 
-boolean lastConnected = false;
-int resetCounter = 0;
-//=================
 #define SensorPin A1
 #define RelayPin 13
 #define ReadyPin 12
@@ -31,54 +15,28 @@ double s3 = 0 ;
 char getdata ;  // 儲存接收資料的變數
 double Ampdata ;  // 儲存接收資料的變數
 long mAmpdata ;  // 儲存接收資料的變數
-//===wifi var
-//datatime data object
-datetimeInfo t;
-
 
 void setup() {
     pinMode(RelayPin , OUTPUT) ;  
+    pinMode(ReadyPin , OUTPUT) ;  
     digitalWrite(RelayPin , turnon) ;  
+    digitalWrite(ReadyPin , LOW) ;  
+    digitalWrite(ReadyPin , HIGH) ;  
+    delay(80) ;
+    digitalWrite(ReadyPin , LOW) ;  
+    delay(80) ;
+    digitalWrite(ReadyPin , HIGH) ;  
+    delay(80) ;
+    digitalWrite(ReadyPin , LOW) ;  
+    delay(80) ;
+    digitalWrite(ReadyPin , HIGH) ;  
+    delay(80) ;
+    digitalWrite(ReadyPin , LOW) ;  
+    delay(80) ;
  Serial.begin(9600);
  Serial1.begin(9600) ;
-     pinMode(ReadyPin , OUTPUT) ;  
-    digitalWrite(RelayPin , turnon) ;  
-    digitalWrite(ReadyPin , LOW) ;  
-    digitalWrite(ReadyPin , HIGH) ;  
-    delay(80) ;
-    digitalWrite(ReadyPin , LOW) ;  
-    delay(80) ;
-    digitalWrite(ReadyPin , HIGH) ;  
-    delay(80) ;
-    digitalWrite(ReadyPin , LOW) ;  
-    delay(80) ;
-    digitalWrite(ReadyPin , HIGH) ;  
-    delay(80) ;
-    digitalWrite(ReadyPin , LOW) ;  
-    delay(80) ;
-
 // while(!Serial) ;
  Serial.println("Program Start") ;
-//wifi start here
- LWiFi.begin();
-
- Serial.println();
- Serial.print("Connecting to AP...");
-// if(LWiFi.connectWEP(WIFI_AP, WIFI_PWD) < 0)
- if(LWiFi.connect(WIFI_AP) < 0)
- {
- Serial.println("FAIL!");
- return;
- }
- Serial.println("ok");
- Serial.print("Connecting to site...");
- if(!client.connect(SITE_URL, 80))
- {
- Serial.println("FAIL!");
- return;
- }
- Serial.println("ok");
- //client.close() ;
  initCounter= 0 ;
     Serial.println("now init Average") ;
   for(int i = 0 ; i <initCount; i++)
@@ -106,97 +64,51 @@ void setup() {
     digitalWrite(ReadyPin , HIGH) ;  
         
 
-
 }
 
 //String analogValue0 = String(lightMeter.readLightLevel(), DEC);
 void loop()
 {
-    // get date time
-        LDateTime.getTime(&t);
-        String analogdata = String(analogRead(SensorPin), DEC);
-        String tramformdata = String(analogRead(SensorPin), DEC);
-        String datedata = String(t.year, DEC)+"/"+String(t.mon, DEC)+"/"+String(t.day, DEC);
-        String timedata = String(t.hour, DEC)+":"+String(t.min, DEC)+":"+String(t.sec, DEC);
-    // get current data
-     Ampdata = ReadCurrentAverage() ;
-     mAmpdata =  (long)(Ampdata * 1000) ;
+    
+  getdata = '@'; 
+  // 若收到藍牙模組的資料，則送到「序列埠監控視窗」
+  if (Serial1.available()) {
+    getdata = Serial1.read();
+  
+    Serial.print("(");
+    Serial.print(getdata, DEC);
+    Serial.print(")\n");
+
+  }
+
+    if (getdata == 67)
+        {
+          digitalWrite(RelayPin, turnoff) ;
+        }
+
+    if (getdata == 79)
+        {
+          digitalWrite(RelayPin, turnon) ;
+        }
+
+    if (getdata == 81)
+        {
+            Ampdata = ReadCurrentAverage() ;
+            Serial1.print("@");
+            Serial1.print(String(Ampdata,5) );
+            Serial.print("(") ;
+            Serial.print(Ampdata) ;
+            Serial.print("/") ;
+            Serial.print(String(Ampdata,5)) ;
+            Serial.print(")\n") ;
             
+        }
+
+  
       delay(200) ;
-    Serial.print("Data is :(");
-  Serial.print(mAmpdata);
-  Serial.print("/");
-  Serial.print(Ampdata);
-  Serial.print(")\n");
   
-  // Print Update Response to Serial Monitor
-  while (client.available())
-  {
-    char c = client.read();
-    Serial.print(c);
-  }
-  
-  //  updateThingSpeak("field4="+Ampdata);
- //   Serial.println("Update thingspeak is ok");
-    
-    updateThingSpeak("field1="+datedata+"&field2="+timedata+"&field3="+Ampdata+"&field4="+mAmpdata);
-    Serial.println("Update thingspeak is ok");
-
-  
-  delay(10000) ;
-
 }
-//  thinkspeak functions
-
 //===============
-void updateThingSpeak(String tsData)
-{
-  if (client.connect(SITE_URL, 80))
-  { 
-    Serial.println("Connected to ThingSpeak...");
-    Serial.println();
-        
-    client.print("POST /update HTTP/1.1\n");
-    client.print("Host: api.thingspeak.com\n");
-    client.print("Connection: close\n");
-    client.print("X-THINGSPEAKAPIKEY: "+writeAPIKey+"\n");
-    client.print("Content-Type: application/x-www-form-urlencoded\n");
-    client.print("Content-Length: ");
-    client.print(tsData.length());
-    client.print("\n\n");
-
-    client.print(tsData);
-    
-    lastConnectionTime = millis();
-    
-    resetCounter = 0;
-    
-  }
-  else
-  {
-    Serial.println("Connection Failed.");   
-    Serial.println();
-    
-    resetCounter++;
-    
-    if (resetCounter >=5 ) {resetEthernetShield();}
-
-    lastConnectionTime = millis(); 
-  }
-}
-
-void resetEthernetShield()
-{
-  Serial.println("Resetting Ethernet Shield.");   
-  Serial.println();
-  
-  client.stop();
-  //delay(1000);
-  
- // Ethernet.begin(mac, ip, gateway, subnet);
-  delay(1000);
-}
-
 //===============
 double ReadCurrentAverage()
 {
@@ -267,8 +179,5 @@ double ReadCurrent()
  // Serial.print("Aout Value =( ");
  return Amp ;
 }
-
-
-
 
 
